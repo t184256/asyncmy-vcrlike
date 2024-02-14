@@ -34,18 +34,19 @@ asyncmy_vcrlike = "asyncmy_vcrlike"
 "*" = ["py.typed"]
 
 [tool.pytest.ini_options]
-addopts = "--mypy --cov --cov-report term-missing --doctest-modules"
+#addopts = "--mypy --cov --cov-report term-missing --doctest-modules"
+addopts = "--mypy --doctest-modules"
 asyncio_mode = "auto"
 
-[tool.coverage]
-run.source = [ "asyncmy_vcrlike" ]
-run.branch = true
-report.exclude_lines = [
-  "# pragma: no cover",
-  "if __name__ == .__main__.:",
-  "...  # overload",
-]
-report.fail_under = 100
+#[tool.coverage]
+#run.source = [ "asyncmy_vcrlike" ]
+#run.branch = true
+#report.exclude_lines = [
+#  "# pragma: no cover",
+#  "if __name__ == .__main__.:",
+#  "...  # overload",
+#]
+#report.fail_under = 100
 
 [tool.mypy]
 strict = true

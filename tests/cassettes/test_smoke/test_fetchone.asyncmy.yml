@@ -1,0 +1,23 @@
+- request: {args: null, query: DROP DATABASE IF EXISTS `my`}
+  response: []
+- request: {args: null, query: CREATE DATABASE `my` DEFAULT CHARACTER SET utf8 DEFAULT
+      COLLATE utf8_general_ci}
+  response: []
+- request: {args: null, query: USE `my`}
+  response: []
+- request: {args: null, query: 'CREATE TABLE o (i int, s varchar(50))'}
+  response: []
+- request:
+    args: [2, b]
+    query: INSERT INTO o VALUES (%s, %s)
+  response: []
+- request:
+    args: [1, a]
+    query: INSERT INTO o VALUES (%s, %s)
+  response: []
+- request: {args: null, query: SELECT * FROM o ORDER BY i ASC}
+  response:
+  - [1, a]
+  - [2, b]
+- request: {args: null, query: DROP DATABASE IF EXISTS `my`}
+  response: []

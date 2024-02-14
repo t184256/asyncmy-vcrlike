@@ -59,15 +59,17 @@ def _async_mysql(
             f'DEFAULT COLLATE {collation}'
         )
         async with pool.acquire() as conn, conn.cursor() as cur:
+            await cur.execute(f'DROP DATABASE IF EXISTS `{mysql_db}`')
             await cur.execute(query_str)
             await cur.execute(f'USE `{mysql_db}`')
 
-        yield pool
-
-        async with pool.acquire() as conn, conn.cursor() as cur:
-            await cur.execute(f'DROP DATABASE IF EXISTS `{mysql_db}`')
-        pool.close()
-        await pool.wait_closed()
+        try:
+            yield pool
+        finally:
+            async with pool.acquire() as conn, conn.cursor() as cur:
+                await cur.execute(f'DROP DATABASE IF EXISTS `{mysql_db}`')
+            pool.close()
+            await pool.wait_closed()
 
     return mysql_fixture
 

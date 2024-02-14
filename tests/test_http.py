@@ -3,6 +3,7 @@
 
 """Test that the plugin doesn't break regular aiohttp recording."""
 
+import asyncio
 import typing
 
 import aiohttp
@@ -16,6 +17,7 @@ async def test_smoke_aiohttp() -> None:
     async with aiohttp.ClientSession() as sess, sess.get(url) as response:
         html = await response.text()
         assert '<title>Example Domain</title>' in html
+    await asyncio.sleep(0.5)  # https://github.com/aio-libs/aiohttp/issues/1925
 
 
 # pytest-recording configuration
