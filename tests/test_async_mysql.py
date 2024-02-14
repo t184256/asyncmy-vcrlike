@@ -6,7 +6,7 @@
 import asyncmy  # type: ignore[import-untyped]
 
 
-async def test_mysql(async_mysql: asyncmy.Connection) -> None:
+async def test_mysql(async_mysql: asyncmy.Pool) -> None:
     """Run test."""
-    async with async_mysql.cursor() as cur:
+    async with async_mysql.acquire() as conn, conn.cursor() as cur:
         await cur.execute('CREATE TABLE pet (name VARCHAR(20));')

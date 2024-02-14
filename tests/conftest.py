@@ -35,7 +35,7 @@ def _async_mysql(
     @pytest.fixture()
     async def mysql_fixture(
         request: FixtureRequest,
-    ) -> typing.AsyncGenerator[asyncmy.Connection, None]:
+    ) -> typing.AsyncGenerator[asyncmy.Pool, None]:
         config = pytest_mysql.config.get_config(request)
         mysql_db = dbname or config['dbname']
 
@@ -51,22 +51,23 @@ def _async_mysql(
             'user': process.user,
             'password': passwd or config['passwd'],
         }
-        conn = await asyncmy.connect(**connection_kwargs)
+        pool = await asyncmy.create_pool(**connection_kwargs)
 
         query_str = (
             f'CREATE DATABASE `{mysql_db}` '
             f'DEFAULT CHARACTER SET {charset} '
             f'DEFAULT COLLATE {collation}'
         )
-        async with conn.cursor() as cur:
+        async with pool.acquire() as conn, conn.cursor() as cur:
             await cur.execute(query_str)
             await cur.execute(f'USE `{mysql_db}`')
 
-        yield conn
+        yield pool
 
-        async with conn.cursor() as cur:
+        async with pool.acquire() as conn, conn.cursor() as cur:
             await cur.execute(f'DROP DATABASE IF EXISTS `{mysql_db}`')
-        conn.close()
+        pool.close()
+        await pool.wait_closed()
 
     return mysql_fixture
 
