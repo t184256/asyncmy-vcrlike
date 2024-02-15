@@ -51,7 +51,12 @@ def _async_mysql(
             'user': process.user,
             'password': passwd or config['passwd'],
         }
-        pool = await asyncmy.create_pool(**connection_kwargs)
+        try:
+            pool = await asyncmy.create_pool(**connection_kwargs)
+        except asyncmy.errors.OperationalError:
+            # Fallback to mysql connection with root user
+            connection_kwargs['user'] = 'root'
+            pool = await asyncmy.create_pool(**connection_kwargs)
 
         query_str = (
             f'CREATE DATABASE `{mysql_db}` '
