@@ -20,8 +20,7 @@
         aiohttp
         coverage pytest-cov
         mypy pytest-mypy
-        pkgs.mariadb
-      ] ++ [pkgs.ruff]);
+      ] ++ [pkgs.mariadb pkgs.ruff]);
       devTools = pkgs: pyPackages: (with pyPackages; [
         pytest-icecream
       ]);
@@ -72,7 +71,7 @@
           format = "pyproject";
           propagatedBuildInputs = deps python3Packages;
           nativeBuildInputs = [ python3Packages.setuptools ];
-          checkInputs = tools pkgs python3Packages;
+          nativeCheckInputs = tools pkgs python3Packages;
         };
 
       overlay = final: prev: {
@@ -112,5 +111,11 @@
           packages.asyncmy-vcrlike = asyncmy-vcrlike;
           packages.default = asyncmy-vcrlike;
         }
-    ) // { overlays.default = overlay; };
+      ) // {
+        overlays = {
+          all = overlay-all;
+          pytest-mysql = pytest-mysql-overlay;
+          default = overlay;
+        };
+      };
 }

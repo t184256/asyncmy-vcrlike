@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: sudo apt update && sudo apt -y install git-core
+      - run: sudo apt update && sudo apt -y install git-core default-mysql-server
       - run: pip3 install -U setuptools pip
       - run: pip3 install .[test]
       - run: pip3 uninstall -y psycopg-vcrlike
