@@ -4,7 +4,6 @@
 """Pytest plugin provided by asyncmy_vcrlike."""
 
 import asyncio
-import contextlib
 import io
 import pathlib
 import types
@@ -129,7 +128,6 @@ def _replaying_stub_versions(  # noqa: C901
     vcr_path: pathlib.Path,
 ) -> tuple[type, type, type, ConnCoro, PoolFunc]:
     orig_connect = asyncmy.connect
-    orig_create_pool = asyncmy.create_pool
 
     class ReplayingStubCursor(_LimitedCursor):
         """Replaying stub of Cursor."""
@@ -249,8 +247,8 @@ def _replaying_stub_versions(  # noqa: C901
         @typing.no_type_check
         def __init__(
             self,
-            minsize: int,
-            maxsize: int,
+            minsize: int = 1,
+            maxsize: int = 10,
             pool_recycle: int = 3600,
             echo: bool = False,  # noqa: FBT001, FBT002
             **kwargs,  # noqa: ANN003
@@ -258,36 +256,33 @@ def _replaying_stub_versions(  # noqa: C901
             pass
 
         @typing.no_type_check
-        async def open(self, *a, **kwa) -> None:  # noqa: ANN002, ANN003
+        def close(self) -> None:
             pass
 
         @typing.no_type_check
-        async def close(self, *a, **kwa) -> None:  # noqa: ANN002, ANN003
+        def terminate(self) -> None:
             pass
 
         @typing.no_type_check
-        async def wait(self, *a, **kwa) -> None:  # noqa: ANN002, ANN003
+        async def wait_closed(self) -> None:
             pass
 
         @typing.no_type_check
-        @staticmethod
-        async def check_connection(conn) -> None:  # noqa: ANN001
-            pass
+        def acquire(self):  # noqa: ANN202
+            async def coro() -> ReplayingStubConnection:
+                return ReplayingStubConnection()
+
+            return asyncmy.contexts._PoolAcquireContextManager(  # noqa: SLF001
+                coro(),
+                self,
+            )
 
         @typing.no_type_check
-        async def getconn(  # noqa: ANN202, PLR6301
-            self,
-            timeout: float | None = None,  # noqa: ARG002
-        ):
-            return ReplayingStubConnection()
+        def release(self, conn) -> None:  # noqa: ANN001, ARG002, PLR6301
+            async def coro() -> None:
+                pass
 
-        @typing.no_type_check
-        @contextlib.asynccontextmanager
-        async def connection(  # noqa: ANN202, PLR6301
-            self,
-            timeout: float | None = None,  # noqa: ARG002
-        ):
-            yield ReplayingStubConnection()
+            return coro()
 
         async def __aenter__(self: typing.Self) -> typing.Self:
             return self
@@ -308,7 +303,11 @@ def _replaying_stub_versions(  # noqa: C901
     @typing.no_type_check
     def replaying_create_pool(**kwa) -> typing.Any:  # noqa: ANN003, ANN401
         kwa['cursor_cls'] = ReplayingStubCursor
-        return orig_create_pool(**kwa)
+
+        async def cp() -> ReplayingStubPool:
+            return ReplayingStubPool(**kwa)
+
+        return asyncmy.contexts._PoolContextManager(cp())  # noqa: SLF001
 
     return (
         ReplayingStubCursor,
