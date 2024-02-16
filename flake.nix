@@ -13,6 +13,7 @@
         asyncmy
         ruamel_yaml
         pytest-recording
+        pytest
       ];
       tools = pkgs: pyPackages: (with pyPackages; [
         pytest pytestCheckHook pytest-asyncio
