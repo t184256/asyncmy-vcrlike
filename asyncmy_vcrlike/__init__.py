@@ -208,8 +208,7 @@ def _replaying_stub_versions(  # noqa: C901
         ) -> typing.Self:
             return cls()
 
-        @typing.no_type_check
-        async def close(self, *a, **kwa) -> None:  # noqa: ANN002, ANN003
+        def close(self) -> None:
             pass
 
         @typing.no_type_check
