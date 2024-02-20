@@ -211,6 +211,9 @@ def _replaying_stub_versions(  # noqa: C901
         def close(self) -> None:
             pass
 
+        async def ensure_closed(self) -> None:
+            pass
+
         @typing.no_type_check
         async def execute(self, *a, **kwa) -> None:  # noqa: ANN002, ANN003
             curr = self.cursor()
