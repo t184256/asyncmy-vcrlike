@@ -9,22 +9,28 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }@inputs:
     let
-      deps = pyPackages: with pyPackages; [
+      pyDeps = pyPackages: with pyPackages; [
         asyncmy
         ruamel_yaml
         pytest-recording
         pytest
       ];
-      tools = pkgs: pyPackages: (with pyPackages; [
-        pytest pytestCheckHook pytest-asyncio
+      pyTestDeps = pyPackages: with pyPackages; [
+        pytestCheckHook pytest-asyncio
+        coverage pytest-cov
         pytest-mysql
         aiohttp
-        coverage pytest-cov
-        mypy pytest-mypy
-      ] ++ [pkgs.mariadb pkgs.ruff]);
-      devTools = pkgs: pyPackages: (with pyPackages; [
-        pytest-icecream
-      ]);
+      ];
+      pyTools = pyPackages: with pyPackages; [ mypy pytest-icecream ];
+
+      testDeps = pkgs: with pkgs; [ mariadb ];
+      tools = pkgs: with pkgs; [
+        pre-commit
+        ruff
+        codespell
+        actionlint
+        python3Packages.pre-commit-hooks
+      ];
 
       pytest-mysql-overlay = final: prev: {
         pythonPackagesExtensions =
@@ -37,10 +43,10 @@
                 sha256 = "sha256-IhP9edq1I+msqMnQqurWv6oiZrLDfDJw33VWwWezi8M=";
               };
               format = "pyproject";
+              build-system = [ pyPrev.setuptools ];
               propagatedBuildInputs = with pyPrev; [
                 pytest port-for mirakuru mysqlclient
               ];
-              nativeBuildInputs = with pyPrev; [ setuptools ];
             };
           })];
       };
@@ -51,9 +57,10 @@
           version = "0.0.1";
           src = ./.;
           format = "pyproject";
-          propagatedBuildInputs = deps python3Packages;
-          nativeBuildInputs = [ python3Packages.setuptools ];
-          nativeCheckInputs = tools pkgs python3Packages;
+          build-system = [ python3Packages.setuptools ];
+          propagatedBuildInputs = pyDeps python3Packages;
+          checkInputs = pyTestDeps python3Packages;
+          nativeCheckInputs = testDeps pkgs;
         };
 
       overlay = final: prev: {
@@ -80,12 +87,17 @@
         in
         {
           devShells.default = pkgs.mkShell {
-            buildInputs = [(defaultPython3Packages.python.withPackages deps)];
-            nativeBuildInputs = [
-              (tools pkgs defaultPython3Packages)
-              (devTools pkgs defaultPython3Packages)
-            ];
+            buildInputs = [(defaultPython3Packages.python.withPackages (
+              pyPkgs: pyDeps pyPkgs ++ pyTestDeps pyPkgs ++ pyTools pyPkgs
+            ))];
+            nativeBuildInputs = [(pkgs.buildEnv {
+              name = "asyncmy-vcrlike-tools-env";
+              pathsToLink = [ "/bin" "/share" ];
+              paths = testDeps pkgs ++ tools pkgs;
+            })];
             shellHook = ''
+              [ -e .git/hooks/pre-commit ] || \
+                echo "suggestion: pre-commit install --install-hooks" >&2
               export PYTHONASYNCIODEBUG=1 PYTHONWARNINGS=error
             '';
           };

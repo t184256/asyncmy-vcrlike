@@ -320,7 +320,7 @@ def _replaying_stub_versions(  # noqa: C901
     )
 
 
-# We're gonna extend pytest-recording
+# We're going to extend pytest-recording
 # with this fixture that replaces asyncmy internals
 # with either recording or playback versions
 # depending on the mode and presence of cassettes

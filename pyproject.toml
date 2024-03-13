@@ -23,10 +23,15 @@ optional-dependencies.test = [
   "aiohttp",
   "pytest",
   "coverage", "pytest-cov",
-  "mypy", "pytest-mypy",
-  "ruff",
 ]
-
+optional-dependencies.lint = [
+  "pre-commit",
+  "mypy",
+  "ruff",
+  "codespell",
+  "actionlint-py",
+  "pre-commit-hooks",
+]
 [project.entry-points."pytest11"]
 asyncmy_vcrlike = "asyncmy_vcrlike"
 
@@ -34,8 +39,8 @@ asyncmy_vcrlike = "asyncmy_vcrlike"
 "*" = ["py.typed"]
 
 [tool.pytest.ini_options]
-#addopts = "--mypy --cov --cov-report term-missing --doctest-modules"
-addopts = "--mypy --doctest-modules"
+#addopts = "--cov --cov-report term-missing --doctest-modules"
+addopts = "--doctest-modules"
 asyncio_mode = "auto"
 
 #[tool.coverage]
@@ -59,6 +64,7 @@ lint.ignore = [
   "D105",  # undocumented-magic-method
   "D203",  # one-blank-line-before-class
   "D213",  # multi-line-summary-second-line
+  "Q001",  # bad-quotes-multiline-string
 ]
 lint.per-file-ignores."tests/**" = [
   "INP001",  # implicit-namespace-package
