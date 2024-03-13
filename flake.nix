@@ -45,25 +45,6 @@
           })];
       };
 
-      fresh-mypy-overlay = final: prev: {
-        pythonPackagesExtensions =
-          prev.pythonPackagesExtensions ++ [(pyFinal: pyPrev: {
-            mypy =
-              if prev.lib.versionAtLeast pyPrev.mypy.version "1.7.0"
-              then pyPrev.mypy
-              else pyPrev.mypy.overridePythonAttrs (_: {
-                version = "1.8.0";
-                patches = [];
-                src = prev.fetchFromGitHub {
-                  owner = "python";
-                  repo = "mypy";
-                  rev = "refs/tags/v1.8.0";
-                  hash = "sha256-1YgAswqLadOVV5ZSi5ZXWYK3p114882IlSx0nKChGPs=";
-                };
-              });
-          })];
-      };
-
       asyncmy-vcrlike-package = {pkgs, python3Packages}:
         python3Packages.buildPythonPackage {
           pname = "asyncmy-vcrlike";
@@ -87,7 +68,6 @@
       overlay-all = nixpkgs.lib.composeManyExtensions [
         inputs.pytest-icecream.overlays.default
         pytest-mysql-overlay
-        fresh-mypy-overlay
         overlay
       ];
     in
@@ -115,7 +95,6 @@
       ) // {
         overlays = {
           all = overlay-all;
-          fresh-mypy = fresh-mypy-overlay;
           pytest-mysql = pytest-mysql-overlay;
           default = overlay;
         };
